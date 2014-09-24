@@ -21,7 +21,6 @@ public class Ball {
 	}
 	
 	public static MainActivity m_activity;
-    private static final String TAG = "RemoteActivity";
 	
 	public Ball(SampleSurfaceView owner) {
 		this(owner, -1, -1);

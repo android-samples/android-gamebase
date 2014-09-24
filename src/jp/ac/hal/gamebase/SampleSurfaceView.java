@@ -168,7 +168,8 @@ public class SampleSurfaceView implements
 //				Rect src = new Rect(0, 0, 600, 900);
 //				Rect dst = new Rect(0, 0, 1200, 1800);
 				Rect src = new Rect(0, 0, 2000, 900);
-				Rect dst = new Rect(0, 0, 2600, 1200);
+				//Rect dst = new Rect(0, 0, 2600, 1200);
+				Rect dst = new Rect(0, 0, 1000, 800);
 				canvas.drawBitmap(m_bgImage, src, dst, null);
 				// ボール
 				synchronized(this){
