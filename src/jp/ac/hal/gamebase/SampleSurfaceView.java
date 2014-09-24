@@ -149,32 +149,66 @@ public class SampleSurfaceView implements
 
 	private boolean b_pausing = false;
 	
+	// ボール座標
+	private int mNewBallX;
+	private int mNewBallY;
+	// ボール速度
+	private float mNewBallMx = 3;
+	private float mNewBallMy = 5;
+	
 	@Override
 	public void run() {
 		
 		m_balls = new Balls(this, m_values);
+		
+		// 新しい種類のボール
+		mNewBallX = 100;
+		mNewBallY = 100;
+		
+		
 		// TODO Auto-generated method stub
 		while (m_isAttached) {
 			t1 = System.currentTimeMillis();
 
 			// ゲーム処理
 			m_balls.frame();
+			
+			// 重力
+			mNewBallMy += 0.5;
+			
+			// はねかえり条件
+			if(mNewBallX >= m_width || mNewBallX <= 0){
+				mNewBallMx *= -0.9f;
+			}
+			if(mNewBallY >= m_height || mNewBallY <= 0){
+				mNewBallMy *= -0.9f;
+			}
+			
+			// 新ボール処理
+			mNewBallX += mNewBallMx;
+			mNewBallY += mNewBallMy;
 
 			// 描画処理
 			Canvas canvas = m_holder.lockCanvas();
 			if(canvas != null){
 				// 背景
 				canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-//				Rect src = new Rect(0, 0, 600, 900);
-//				Rect dst = new Rect(0, 0, 1200, 1800);
 				Rect src = new Rect(0, 0, 2000, 900);
-				//Rect dst = new Rect(0, 0, 2600, 1200);
 				Rect dst = new Rect(0, 0, 1000, 800);
 				canvas.drawBitmap(m_bgImage, src, dst, null);
 				// ボール
 				synchronized(this){
-					m_balls.draw(canvas);
+					// m_balls.draw(canvas);
 				}
+				// 新ボール描画
+				Paint paint = new Paint();
+				paint.setColor(Color.rgb(255, 0, 0));
+				canvas.drawCircle(
+					(float)mNewBallX,
+					(float)mNewBallY,
+					(float)20, // 半径
+					paint);
+				// 描画確定
 				m_holder.unlockCanvasAndPost(canvas);
 			}
 
