@@ -46,7 +46,6 @@ public class SampleSurfaceView implements
 	public int m_width = 0;
 	public int m_height = 0;
 	private long t1, t2;
-	private Balls m_balls;
 	public SoundPool m_soundPool;
 	public int[] m_soundIds = new int[11];
 	
@@ -54,10 +53,6 @@ public class SampleSurfaceView implements
 	private float[] m_values = new float[4];
 
 	private SensorManager m_sensorManager;
-	
-	public synchronized void pushWind(){
-		m_balls.pushWind();
-	}
 	
 	public SampleSurfaceView(SurfaceView view) {
 		SurfaceHolder holder = view.getHolder();
@@ -73,9 +68,6 @@ public class SampleSurfaceView implements
 	
 	public void onSeekChanged(float[] values){
 		m_values = values;
-		if(m_balls != null){
-			m_balls.onSeekChanged(values);
-		}
 	}
 	
 	public void onResume(Activity activity){
@@ -97,29 +89,17 @@ public class SampleSurfaceView implements
 			Sensor s = sensors.get(0);
 			m_sensorManager.registerListener(this, s, SensorManager.SENSOR_DELAY_UI);
 		}
-		// スレッド再開
-		if(m_thread != null){
-			b_pausing = false;
-		}
 	}
 	public void onPause(Activity activity){
 		m_soundPool.release();
 		// Listenerの登録解除
 		m_sensorManager.unregisterListener(this);
-		// 一旦スレッドも止める
-		if(m_thread != null){
-			b_pausing = true;
-		}
 	}
 
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
 		switch (event.getAction()) {
 		case MotionEvent.ACTION_DOWN:
-			//m_balls.addBall(event.getX(), event.getY());
-			// リモコン操作
-			//Toast.makeText(v.getContext(), "りもこん", Toast.LENGTH_SHORT).show();
-			m_balls.pushTouch((int)event.getX(), (int)event.getY());
 			break;
 		default:
 			break;
@@ -147,8 +127,6 @@ public class SampleSurfaceView implements
 		m_thread = null;
 	}
 
-	private boolean b_pausing = false;
-	
 	// ボール座標
 	private int mNewBallX;
 	private int mNewBallY;
@@ -156,60 +134,67 @@ public class SampleSurfaceView implements
 	private float mNewBallMx = 3;
 	private float mNewBallMy = 5;
 	
-	@Override
-	public void run() {
-		
-		m_balls = new Balls(this, m_values);
-		
+	// 初期化
+	private void gameInit(){
 		// 新しい種類のボール
 		mNewBallX = 100;
 		mNewBallY = 100;
+	}
+	
+	// フレーム処理
+	private void gameFrame(){
+		// 重力
+		mNewBallMy += 0.5;
 		
+		// はねかえり条件
+		if(mNewBallX >= m_width || mNewBallX <= 0){
+			mNewBallMx *= -0.9f;
+		}
+		if(mNewBallY >= m_height || mNewBallY <= 0){
+			mNewBallMy *= -0.9f;
+		}
 		
-		// TODO Auto-generated method stub
+		// 新ボール処理
+		mNewBallX += mNewBallMx;
+		mNewBallY += mNewBallMy;
+	}
+	
+	private void gameRender(Canvas canvas){
+		// 背景
+		canvas.drawColor(0, PorterDuff.Mode.CLEAR);
+		Rect src = new Rect(0, 0, 2000, 900);
+		Rect dst = new Rect(0, 0, 1000, 800);
+		canvas.drawBitmap(m_bgImage, src, dst, null);
+		// ボール
+		synchronized(this){
+			// m_balls.draw(canvas);
+		}
+		// 新ボール描画
+		Paint paint = new Paint();
+		paint.setColor(Color.rgb(255, 0, 0));
+		canvas.drawCircle(
+			(float)mNewBallX,
+			(float)mNewBallY,
+			(float)20, // 半径
+			paint);
+	}
+	
+	@Override
+	public void run() {
+		// 初期化
+		gameInit();
+		
+		// メインループ
 		while (m_isAttached) {
 			t1 = System.currentTimeMillis();
-
-			// ゲーム処理
-			m_balls.frame();
-			
-			// 重力
-			mNewBallMy += 0.5;
-			
-			// はねかえり条件
-			if(mNewBallX >= m_width || mNewBallX <= 0){
-				mNewBallMx *= -0.9f;
-			}
-			if(mNewBallY >= m_height || mNewBallY <= 0){
-				mNewBallMy *= -0.9f;
-			}
-			
-			// 新ボール処理
-			mNewBallX += mNewBallMx;
-			mNewBallY += mNewBallMy;
+			// フレーム処理
+			gameFrame();
 
 			// 描画処理
 			Canvas canvas = m_holder.lockCanvas();
 			if(canvas != null){
-				// 背景
-				canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-				Rect src = new Rect(0, 0, 2000, 900);
-				Rect dst = new Rect(0, 0, 1000, 800);
-				canvas.drawBitmap(m_bgImage, src, dst, null);
-				// ボール
-				synchronized(this){
-					// m_balls.draw(canvas);
-				}
-				// 新ボール描画
-				Paint paint = new Paint();
-				paint.setColor(Color.rgb(255, 0, 0));
-				canvas.drawCircle(
-					(float)mNewBallX,
-					(float)mNewBallY,
-					(float)20, // 半径
-					paint);
-				// 描画確定
-				m_holder.unlockCanvasAndPost(canvas);
+				gameRender(canvas);
+				m_holder.unlockCanvasAndPost(canvas); // 描画確定
 			}
 
 			// スリープ
@@ -235,9 +220,6 @@ public class SampleSurfaceView implements
 				event.values[SensorManager.DATA_Y], // -10～10 (m/s2)
 				event.values[SensorManager.DATA_Z] // -10～10 (m/s2)
 			};
-			if(m_balls != null){
-				m_balls.onSensorChanged(accs);
-			}
 		}
 	}
 

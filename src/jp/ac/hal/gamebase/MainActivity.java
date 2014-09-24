@@ -48,8 +48,6 @@ public class MainActivity extends Activity implements
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-    	Ball.m_activity = this;
-    	
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
