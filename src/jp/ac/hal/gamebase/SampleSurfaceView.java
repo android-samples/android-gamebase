@@ -135,38 +135,42 @@ public class SampleSurfaceView implements
 
 	class Ball{
 		// ボール座標
-		private int mNewBallX;
-		private int mNewBallY;
+		private float mX;
+		private float mY;
 		// 速度
-		private float speedX = 8;
-		private float speedY = 4;
+		private float mMx = 8;
+		private float mMy = 4;
 		//
 		public Ball(){
+			// 位置と速度をランダムに散らばせる
 			Random r = new Random();
-			mNewBallX = 10 + r.nextInt(100);
-			mNewBallY = 10 + r.nextInt(100);
-			speedX = -2 + r.nextInt(5);
-			speedY = -2 + r.nextInt(5);
+			mX = 10 + r.nextInt(100);
+			mY = 10 + r.nextInt(100);
+			mMx = -2 + r.nextInt(5);
+			mMy = -2 + r.nextInt(5);
 		}
 		public void onFrame(){
-			mNewBallX += speedX;
-			mNewBallY += speedY;
 			// 跳ね返り処理
-			if(mNewBallX >= m_width || mNewBallX <= 0){
-				speedX *= -0.8;
+			if(mX >= m_width || mX <= 0){
+				mMx *= -0.8;
+				mX += mMx;
 			}
-			if(mNewBallY >= m_height || mNewBallY <= 0){
-				speedY *= -0.8;
+			if(mY >= m_height || mY <= 0){
+				mMy *= -0.8;
+				mY += mMy;
 			}
 			// 重力処理
-			speedY += 0.8;
+			mMy += 0.8;
+			// 移動
+			mX += mMx;
+			mY += mMy;
 		}
 		public void draw(Canvas canvas){
 			Paint paint = new Paint();
 			paint.setColor(Color.rgb(255, 255, 0));
 			canvas.drawCircle(
-				(float)mNewBallX,
-				(float)mNewBallY,
+				mX,
+				(float)mY,
 				(float)20, // 半径
 				paint);
 		}
