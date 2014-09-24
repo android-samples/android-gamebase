@@ -127,36 +127,65 @@ public class SampleSurfaceView implements
 		m_thread = null;
 	}
 
-	// ボール座標
-	private int mNewBallX;
-	private int mNewBallY;
-	// ボール速度
-	private float mNewBallMx = 3;
-	private float mNewBallMy = 5;
 	
 	// 初期化
 	private void gameInit(){
 		// 新しい種類のボール
-		mNewBallX = 100;
-		mNewBallY = 100;
 	}
+
+	class Ball{
+		// ボール座標
+		private int mNewBallX;
+		private int mNewBallY;
+		// 速度
+		private float speedX = 8;
+		private float speedY = 4;
+		//
+		public Ball(){
+			Random r = new Random();
+			mNewBallX = 10 + r.nextInt(100);
+			mNewBallY = 10 + r.nextInt(100);
+			speedX = -2 + r.nextInt(5);
+			speedY = -2 + r.nextInt(5);
+		}
+		public void onFrame(){
+			mNewBallX += speedX;
+			mNewBallY += speedY;
+			// 跳ね返り処理
+			if(mNewBallX >= m_width || mNewBallX <= 0){
+				speedX *= -0.8;
+			}
+			if(mNewBallY >= m_height || mNewBallY <= 0){
+				speedY *= -0.8;
+			}
+			// 重力処理
+			speedY += 0.8;
+		}
+		public void draw(Canvas canvas){
+			Paint paint = new Paint();
+			paint.setColor(Color.rgb(255, 255, 0));
+			canvas.drawCircle(
+				(float)mNewBallX,
+				(float)mNewBallY,
+				(float)20, // 半径
+				paint);
+		}
+	}
+	Ball[] balls ={
+		new Ball(),
+		new Ball(),
+		new Ball(),
+		new Ball(),
+		new Ball()
+	};
 	
 	// フレーム処理
 	private void gameFrame(){
-		// 重力
-		mNewBallMy += 0.5;
-		
-		// はねかえり条件
-		if(mNewBallX >= m_width || mNewBallX <= 0){
-			mNewBallMx *= -0.9f;
+		// オブジェクト計算を行う
+		// （位置・速度・ダメージ計算等等）
+		for(Ball ball : balls){
+			ball.onFrame();
 		}
-		if(mNewBallY >= m_height || mNewBallY <= 0){
-			mNewBallMy *= -0.9f;
-		}
-		
-		// 新ボール処理
-		mNewBallX += mNewBallMx;
-		mNewBallY += mNewBallMy;
 	}
 	
 	private void gameRender(Canvas canvas){
@@ -165,18 +194,10 @@ public class SampleSurfaceView implements
 		Rect src = new Rect(0, 0, 2000, 900);
 		Rect dst = new Rect(0, 0, 1000, 800);
 		canvas.drawBitmap(m_bgImage, src, dst, null);
-		// ボール
-		synchronized(this){
-			// m_balls.draw(canvas);
-		}
 		// 新ボール描画
-		Paint paint = new Paint();
-		paint.setColor(Color.rgb(255, 0, 0));
-		canvas.drawCircle(
-			(float)mNewBallX,
-			(float)mNewBallY,
-			(float)20, // 半径
-			paint);
+		for(Ball ball : balls){
+			ball.draw(canvas);
+		}
 	}
 	
 	@Override
@@ -214,13 +235,6 @@ public class SampleSurfaceView implements
 	// -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- //
 	@Override
 	public void onSensorChanged(SensorEvent event) {
-		if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
-			float[] accs = {
-				event.values[SensorManager.DATA_X], // -10～10 (m/s2)
-				event.values[SensorManager.DATA_Y], // -10～10 (m/s2)
-				event.values[SensorManager.DATA_Z] // -10～10 (m/s2)
-			};
-		}
 	}
 
 	// 精度が変わったとき
